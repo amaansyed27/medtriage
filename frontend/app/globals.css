@@ -88,7 +88,7 @@ body {
 @keyframes medtriage-fadein {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -97,7 +97,7 @@ body {
 }
 
 .fade-in {
-  animation: medtriage-fadein 0.5s ease-out forwards;
+  animation: medtriage-fadein 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* ──────────────────────────────────────────────
@@ -107,7 +107,7 @@ body {
 @keyframes medtriage-slideup {
   from {
     opacity: 0;
-    transform: translateY(24px);
+    transform: translateY(40px);
   }
   to {
     opacity: 1;
@@ -116,7 +116,68 @@ body {
 }
 
 .slide-up {
-  animation: medtriage-slideup 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: medtriage-slideup 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.02); }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 3s ease-in-out infinite;
+}
+
+/* Paper Stack Effect */
+.paper-stack {
+  position: relative;
+  background: var(--color-parchment);
+  border: 1px solid var(--color-glass-border);
+  box-shadow: 2px 4px 12px rgba(0,0,0,0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.paper-stack::before, .paper-stack::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border: 1px solid var(--color-glass-border);
+  background: var(--color-parchment-dark);
+  z-index: -1;
+  transition: transform 0.3s ease;
+}
+.paper-stack::before {
+  transform: translate(4px, 4px) rotate(1deg);
+}
+.paper-stack::after {
+  transform: translate(8px, 8px) rotate(-1deg);
+  z-index: -2;
+}
+.paper-stack:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 8px 20px rgba(0,0,0,0.08);
+}
+.paper-stack:hover::before {
+  transform: translate(6px, 6px) rotate(2deg);
+}
+.paper-stack:hover::after {
+  transform: translate(12px, 12px) rotate(-2deg);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-matcha-dark) 0%, var(--color-matcha) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* ──────────────────────────────────────────────
