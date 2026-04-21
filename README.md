@@ -4,6 +4,8 @@
 
 **AI-Powered Emergency Room Triage System**
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-medtriage--redline.web.app-7BAE7F?style=for-the-badge)](https://medtriage-redline.web.app)
+
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=next.js&logoColor=white)](https://nextjs.org)
@@ -34,7 +36,31 @@
 
 ---
 
-## The Problem
+## 🚀 How to Use the Live App
+
+1. **Open the App:** Navigate to the live deployment at [https://medtriage-redline.web.app](https://medtriage-redline.web.app).
+2. **Sign In:** Click the "Login with Google" button on the landing page to authenticate.
+3. **Enter Intake Notes:** In the dashboard, you will see the "Magic Intake" text box. You can type natural language or paste messy, unstructured notes.
+4. **Try a Trial Prompt:** Copy and paste the following example into the text box:
+   > *72 year old male, BP 182/118, heart rate 134 bpm, O2 sat 86%, pain 9 out of 10. Patient is diaphoretic and short of breath.*
+5. **Analyze:** Click "Analyze Patient". The system will instantly extract the vitals, predict the risk level (in this case, Critical), and explain the clinical rationale.
+
+---
+
+## 💡 The Solution & Features
+
+MedTriage replaces traditional, rigid dropdown forms with a single, intelligent text box. By combining two distinct AI modalities, it delivers speed without sacrificing accuracy or explainability.
+
+### Key Features
+- **Magic Intake (Raw Text Parsing):** Nurses can type or dictate notes naturally. The Gemini Extractor parses unstructured text into precise, structured JSON vitals.
+- **Instant Risk Prediction:** A classical Random Forest model instantly evaluates the extracted vitals and assigns a highly accurate triage risk tier (Routine, Urgent, Critical).
+- **Explainable AI (Clinical Rationale):** A secondary Gemini Explainer agent reviews the ML prediction against the vitals to generate a clear, one-sentence clinical rationale, ensuring doctors understand *why* the AI made its decision.
+- **Secure Dashboard:** Authenticated environment backed by Firebase Auth (Google Sign-In) with support for simulated patient scan uploads to Firebase Storage.
+- **Paper-Minimal UI:** A custom, brutalist-inspired UI designed specifically to reduce cognitive load and eye strain for clinical workers during long shifts.
+
+---
+
+## 🚨 The Problem
 
 | Metric | Value |
 |--------|-------|
