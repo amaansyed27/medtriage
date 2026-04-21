@@ -12,3 +12,6 @@ numpy>=1.26.0
 
 # ──── Gemini API ────
 google-genai>=1.0.0
+
+# ──── CLI ────
+tqdm>=4.66.0
