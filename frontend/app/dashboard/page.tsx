@@ -5,6 +5,8 @@ import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { ref, uploadBytes } from "firebase/storage";
 import { getAuthInstance, getStorageInstance } from "@/lib/firebase";
 
+import { useRouter } from "next/navigation";
+
 // ────────────────────────────────────────────────────────────────────────────
 // Types
 // ────────────────────────────────────────────────────────────────────────────
@@ -70,6 +72,7 @@ const SAMPLE_TEXT =
 // ────────────────────────────────────────────────────────────────────────────
 
 export default function TriageDashboard() {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [rawText, setRawText] = useState<string>("");
@@ -90,13 +93,13 @@ export default function TriageDashboard() {
   // ── Redirect to login if not authenticated ──
   useEffect(() => {
     if (!authLoading && !user) {
-      window.location.href = "/";
+      router.push("/");
     }
-  }, [authLoading, user]);
+  }, [authLoading, user, router]);
 
   async function handleLogout(): Promise<void> {
     await signOut(getAuthInstance());
-    window.location.href = "/";
+    router.push("/");
   }
 
   async function handleAnalyze(): Promise<void> {

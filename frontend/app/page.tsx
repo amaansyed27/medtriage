@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { signInWithPopup, onAuthStateChanged, type User } from "firebase/auth";
 import { getAuthInstance, googleProvider } from "@/lib/firebase";
 
+import { useRouter } from "next/navigation";
+
 // ────────────────────────────────────────────────────────────────────────────
 // Intersection Observer Hook
 // ────────────────────────────────────────────────────────────────────────────
@@ -33,6 +35,7 @@ function useInView(threshold = 0.15): [React.RefObject<HTMLDivElement | null>, b
 // ────────────────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [loginLoading, setLoginLoading] = useState(false);
@@ -56,14 +59,14 @@ export default function LandingPage() {
     setLoginLoading(true);
     try {
       await signInWithPopup(getAuthInstance(), googleProvider);
-      window.location.href = "/dashboard";
+      router.push("/dashboard");
     } catch {
       setLoginLoading(false);
     }
   }
 
   function goToDashboard(): void {
-    window.location.href = "/dashboard";
+    router.push("/dashboard");
   }
 
   return (
