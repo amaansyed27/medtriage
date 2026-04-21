@@ -1,13 +1,17 @@
 {
   "hosting": {
-    "source": ".",
-    "frameworksBackend": {
-      "region": "us-central1"
-    },
+    "site": "medtriage-redline",
+    "public": "out",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
     ]
   },
   "storage": {

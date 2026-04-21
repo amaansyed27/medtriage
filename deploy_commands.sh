@@ -28,10 +28,10 @@ set -euo pipefail
 # CONFIGURATION — UPDATE THESE BEFORE RUNNING
 # ═══════════════════════════════════════════════════════════════════════════
 
-PROJECT_ID="medtriage-hackovium"       # Must be globally unique
-PROJECT_NAME="MedTriage Hackovium"
+PROJECT_ID="medtriage-redline"         # Must be globally unique
+PROJECT_NAME="MedTriage Redline"
 REGION="us-central1"                   # App Engine & Firebase region
-BILLING_ACCOUNT_ID=""                  # Run: gcloud billing accounts list
+BILLING_ACCOUNT_ID="016742-02BD0B-2AC444"                  # Run: gcloud billing accounts list
 
 # Load GEMINI_API_KEY from backend/.env
 if [ -f "backend/.env" ]; then

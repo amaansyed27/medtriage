@@ -16,6 +16,8 @@ env/
 .env
 .env.*
 *.env
+backend/app.yaml
+backend/*.pkl
 
 # ──────────────────────────────────────────────
 # ML Artifacts

@@ -36,7 +36,11 @@ load_dotenv()
 
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL: str = "gemini-2.5-flash"
-MODEL_PKL_PATH: Path = Path(__file__).parent.parent / "ml" / "medtriage_model.pkl"
+MODEL_PKL_PATH: Path = (
+    Path(__file__).parent / "medtriage_model.pkl"
+    if (Path(__file__).parent / "medtriage_model.pkl").exists()
+    else Path(__file__).parent.parent / "ml" / "medtriage_model.pkl"
+)
 
 FEATURE_ORDER: list[str] = [
     "age",
@@ -137,6 +141,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "https://medtriage-redline.web.app",
+        "https://medtriage-redline.firebaseapp.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
