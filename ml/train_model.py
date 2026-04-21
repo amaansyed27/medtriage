@@ -2,8 +2,9 @@
 MedTriage — Synthetic Data Generation & Random Forest Training Pipeline
 
 Generates 2,000 synthetic patient records with clinically-plausible distributions,
-assigns deterministic risk labels using clinical thresholds, trains a
-RandomForestClassifier, and exports the model as medtriage_model.pkl.
+assigns risk labels using clinical thresholds with realistic label noise (~12%),
+saves the dataset to synthetic_patients.csv, trains a RandomForestClassifier,
+and exports the model as medtriage_model.pkl.
 
 Run:
     cd ml
@@ -26,7 +27,9 @@ import joblib
 
 NUM_SAMPLES: int = 2_000
 RANDOM_SEED: int = 42
+NOISE_RATE: float = 0.12
 MODEL_OUTPUT_PATH: Path = Path(__file__).parent / "medtriage_model.pkl"
+DATA_OUTPUT_PATH: Path = Path(__file__).parent / "synthetic_patients.csv"
 
 FEATURE_COLUMNS: list[str] = [
     "age",
@@ -105,6 +108,30 @@ def assign_risk_level(row: pd.Series) -> int:
     return 0
 
 
+def inject_label_noise(labels: np.ndarray, noise_rate: float, rng: np.random.Generator) -> np.ndarray:
+    """Randomly flip a fraction of labels to simulate real-world annotation noise.
+
+    Flips are constrained to adjacent risk levels to keep them clinically plausible:
+      - Routine (0) can become Urgent (1)
+      - Urgent (1) can become Routine (0) or Critical (2)
+      - Critical (2) can become Urgent (1)
+    """
+    noisy = labels.copy()
+    n_flip = int(len(labels) * noise_rate)
+    flip_indices = rng.choice(len(labels), size=n_flip, replace=False)
+
+    for idx in flip_indices:
+        current = noisy[idx]
+        if current == 0:
+            noisy[idx] = 1
+        elif current == 2:
+            noisy[idx] = 1
+        else:  # current == 1
+            noisy[idx] = rng.choice([0, 2])
+
+    return noisy
+
+
 # ────────────────────────────────────────────────────────────────────────────
 # 4. Model Training
 # ────────────────────────────────────────────────────────────────────────────
@@ -116,22 +143,32 @@ def train_and_export() -> None:
     print("=" * 60)
 
     # Generate synthetic data
-    print(f"\n[1/5] Generating {NUM_SAMPLES} synthetic patient records...")
+    print(f"\n[1/6] Generating {NUM_SAMPLES} synthetic patient records...")
     df = generate_synthetic_data(NUM_SAMPLES, RANDOM_SEED)
 
     # Assign risk labels
-    print("[2/5] Assigning risk labels using clinical thresholds...")
+    print("[2/6] Assigning risk labels using clinical thresholds...")
     df["risk_level"] = df.apply(assign_risk_level, axis=1)
+
+    # Inject label noise for realism
+    print(f"[3/6] Injecting {NOISE_RATE:.0%} label noise for real-world simulation...")
+    rng = np.random.default_rng(RANDOM_SEED + 1)
+    df["risk_level"] = inject_label_noise(df["risk_level"].values, NOISE_RATE, rng)
 
     # Print class distribution
     distribution = df["risk_level"].value_counts().sort_index()
-    print("\n  Class Distribution:")
+    print("\n  Class Distribution (after noise):")
     for level, count in distribution.items():
         pct = count / len(df) * 100
         print(f"    {RISK_LABELS[level]:>8s} ({level}): {count:>5d}  ({pct:.1f}%)")
 
+    # Save dataset to CSV
+    print(f"\n[4/6] Saving dataset to {DATA_OUTPUT_PATH}...")
+    df.to_csv(DATA_OUTPUT_PATH, index=False)
+    print(f"    Saved {len(df)} records ({DATA_OUTPUT_PATH.stat().st_size / 1024:.1f} KB)")
+
     # Split data
-    print("\n[3/5] Splitting into train/test (80/20)...")
+    print(f"\n[5/6] Splitting into train/test (80/20)...")
     X = df[FEATURE_COLUMNS].values
     y = df["risk_level"].values
     X_train, X_test, y_train, y_test = train_test_split(
@@ -141,10 +178,10 @@ def train_and_export() -> None:
     print(f"    Test:  {len(X_test)} samples")
 
     # Train Random Forest
-    print("\n[4/5] Training RandomForestClassifier (n_estimators=200)...")
+    print("\n[6/6] Training RandomForestClassifier (n_estimators=100, max_depth=8)...")
     model = RandomForestClassifier(
-        n_estimators=200,
-        max_depth=12,
+        n_estimators=100,
+        max_depth=8,
         min_samples_split=5,
         min_samples_leaf=2,
         random_state=RANDOM_SEED,

@@ -24,6 +24,7 @@ env/
 *.joblib
 ml/*.pkl
 ml/*.joblib
+ml/*.csv
 
 # ──────────────────────────────────────────────
 # Node / Next.js
