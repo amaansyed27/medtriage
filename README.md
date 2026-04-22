@@ -52,10 +52,13 @@
 MedTriage replaces traditional, rigid dropdown forms with a single, intelligent text box. By combining two distinct AI modalities, it delivers speed without sacrificing accuracy or explainability.
 
 ### Key Features
-- **Magic Intake (Raw Text Parsing):** Nurses can type or dictate notes naturally. The Gemini Extractor parses unstructured text into precise, structured JSON vitals.
-- **Instant Risk Prediction:** A classical Random Forest model instantly evaluates the extracted vitals and assigns a highly accurate triage risk tier (Routine, Urgent, Critical).
+- **Magic Intake (Raw Text & Voice Parsing):** Nurses can type, paste, or **dictate via voice** their notes naturally. The Gemini Extractor parses unstructured text into precise, structured JSON vitals.
+- **Multimodal Scan Analysis:** Users can upload a patient scan (e.g., an ECG or physical handwritten note). The system natively converts this into Base64 and uses Gemini 2.5 Flash's vision capabilities to extract vitals directly from the image without cloud storage overhead.
+- **Zero-Shot Multilingual Translation:** Intake notes entered in Hindi, Tamil, Telugu, or Marathi are automatically detected, translated into English, and displayed alongside the structured vitals on the dashboard.
+- **Real-Time "What-If" Sliders:** Vitals are displayed as interactive sliders. Moving a slider triggers an instant, debounced recalculation of the Random Forest risk tier and Gemini clinical rationale, proving the speed and deterministic nature of the ML layer.
+- **Automated SBAR Generation:** A dedicated Gemini Agent 3 instantly generates a professional SBAR (Situation, Background, Assessment, Recommendation) handoff report tailored for EMRs based on the patient's exact triage state.
 - **Explainable AI (Clinical Rationale):** A secondary Gemini Explainer agent reviews the ML prediction against the vitals to generate a clear, one-sentence clinical rationale, ensuring doctors understand *why* the AI made its decision.
-- **Secure Dashboard:** Authenticated environment backed by Firebase Auth (Google Sign-In) with support for simulated patient scan uploads to Firebase Storage.
+- **Secure Dashboard:** Authenticated environment backed by Firebase Auth (Google Sign-In).
 - **Paper-Minimal UI:** A custom, brutalist-inspired UI designed specifically to reduce cognitive load and eye strain for clinical workers during long shifts.
 
 ---
@@ -74,31 +77,32 @@ Under-triaged patients miss critical intervention windows. Over-triaged patients
 
 ## Cascading Architecture — Deep Dive
 
-MedTriage uses a novel **3-stage cascading pipeline** that combines the strengths of LLMs (natural language understanding, clinical reasoning) with the speed and determinism of classical ML.
+MedTriage uses a novel **4-stage cascading pipeline** that combines the strengths of LLMs (natural language understanding, zero-shot translation, clinical reasoning) with the speed and determinism of classical ML.
 
 ```
-┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
-│   AGENT 1        │     │   ML MODEL       │     │   AGENT 2        │
-│   Gemini 2.5     │────▶│   Random Forest  │────▶│   Gemini 2.5     │
-│   Flash          │     │   (100 trees)    │     │   Flash          │
-│                  │     │                  │     │                  │
-│   Structured     │     │   Risk Level     │     │   Clinical       │
-│   JSON Output    │     │   Prediction     │     │   Rationale      │
-│   (6 vitals)     │     │   {0, 1, 2}      │     │   (1 sentence)   │
-└──────────────────┘     └──────────────────┘     └──────────────────┘
-        ▲                                                  │
-        │                                                  ▼
-  Raw Nurse Text                                    Final Response
-  "72yo male,                                      {vitals, risk,
-   BP 182/118..."                                   rationale}
+┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│   AGENT 1        │     │   ML MODEL       │     │   AGENT 2        │     │   AGENT 3        │
+│   Gemini 2.5     │────▶│   Random Forest  │────▶│   Gemini 2.5     │────▶│   Gemini 2.5     │
+│   Flash Vision   │     │   (100 trees)    │     │   Flash          │     │   Flash          │
+│                  │     │                  │     │                  │     │                  │
+│   Structured     │     │   Risk Level     │     │   Clinical       │     │   Automated      │
+│   JSON Output    │     │   Prediction     │     │   Rationale      │     │   SBAR Handoff   │
+│   + Translation  │     │   {0, 1, 2}      │     │   (1 sentence)   │     │   Report         │
+└──────────────────┘     └──────────────────┘     └──────────────────┘     └──────────────────┘
+        ▲                                                  │                        │
+        │                                                  ▼                        ▼
+  Raw Nurse Text                                    Dashboard UI             EMR Integration
+  or Image Upload                                  {vitals, risk,            (Copyable Text)
+  (Multi-lingual)                                   rationale}
 ```
 
 ### Stage 1 — Gemini Extractor (Agent 1)
 
 - **Model**: `gemini-2.5-flash` with `temperature: 0.0`
-- **Output**: Structured JSON via `response_mime_type: "application/json"` and Pydantic schema enforcement
+- **Output**: Structured JSON via `response_mime_type: "application/json"`
 - **Extracts**: `age`, `systolic_bp`, `diastolic_bp`, `heart_rate`, `o2_saturation`, `pain_score`
-- **Fallback**: Clinically neutral defaults for missing vitals (e.g., `age=50`, `o2_saturation=97.0`)
+- **Feature**: Zero-shot translation for non-English inputs (stored in `translated_text`).
+- **Feature**: Native Multimodal parsing of Base64 images directly into JSON vitals.
 
 ### Stage 2 — Random Forest Predictor
 
@@ -112,8 +116,13 @@ MedTriage uses a novel **3-stage cascading pipeline** that combines the strength
 
 - **Model**: `gemini-2.5-flash` with `temperature: 0.3`
 - **Output**: Free-text, exactly one sentence
-- **Purpose**: Clinical rationale citing specific vital values that drove the prediction
-- **Example**: *"Elevated systolic blood pressure of 185 mmHg combined with an O₂ saturation of 86% indicates acute hemodynamic compromise warranting immediate intervention."*
+- **Purpose**: Clinical rationale citing specific vital values that drove the prediction.
+
+### Stage 4 — SBAR Generator (Agent 3)
+
+- **Model**: `gemini-2.5-flash` with `temperature: 0.2`
+- **Output**: Professional, multi-line free-text
+- **Purpose**: Auto-generates a structured Situation, Background, Assessment, Recommendation report for seamless electronic medical record (EMR) handoffs.
 
 ### Why This Architecture?
 
